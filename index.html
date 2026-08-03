@@ -497,20 +497,21 @@ if(zzS){
  zzS.forEach(function(q){if(q.total>mxv)mxv=q.total});
  var esc=mxv>0?mxv*1.15:1;
  doc.setFont("helvetica","normal");doc.setFontSize(6.5);
- for(var gg=0;gg<=4;gg++){var vy=gy-gh*gg/4;sD(LN2);doc.setLineWidth(.15);doc.line(gx,vy,RX,vy);sC(GRY);doc.text(X(esc*gg/4).replace(/\u00A0?\u20AC/,""),gx-2,vy+1.1,{align:"right"})}
+ for(var gg=0;gg<=4;gg++){var vy=gy-gh*gg/4;sD(LN2);doc.setLineWidth(.15);doc.line(gx,vy,RX,vy);sC(GRY);doc.text(Math.round(esc*gg/4)+" \u20AC",gx-2,vy+1.1,{align:"right"})}
  var bw=gw/zzS.length,bb=bw*.54;
  zzS.forEach(function(q,kk){
   var hh=q.total>0?gh*(q.total/esc):0,bx=gx+bw*kk+(bw-bb)/2;
   if(hh>0){doc.setFillColor(AMB[0],AMB[1],AMB[2]);doc.rect(bx,gy-hh,bb,hh,"F");
-   doc.setFont("helvetica","bold");doc.setFontSize(5.6);sC(PIZ);doc.text(q.total.toFixed(0),bx+bb/2,gy-hh-1.3,{align:"center"})}
+   doc.setFont("helvetica","bold");doc.setFontSize(5.6);sC(PIZ);doc.text(q.total.toFixed(0)+" \u20AC",bx+bb/2,gy-hh-1.3,{align:"center"})}
   doc.setFont("helvetica","normal");doc.setFontSize(6);sC(GRY);
   doc.text(zzMN[+q.mes.slice(5,7)-1]+" "+q.mes.slice(2,4),bx+bb/2,gy+3.6,{align:"center"});
  });
  sD(PIZ);doc.setLineWidth(.3);doc.line(gx,gy,RX,gy);
  cy=gy+8;
- var sum=0;zzS.forEach(function(q){sum+=(q.total||0)});
+ var sum=0,zzNm=0;zzS.forEach(function(q){if(q.total>0){sum+=q.total;zzNm++}});
  doc.setFont("helvetica","bold");doc.setFontSize(9);sC(PIZ);
  doc.text("Total estimado 12 meses: "+X(sum),M,cy);
+ if(zzNm)doc.text("Promedio mensual: "+X(sum/zzNm),M+78,cy);
  doc.setFont("helvetica","normal");doc.setFontSize(7.5);sC(GRY);
  doc.text("Impuestos incluidos \u00B7 "+(b.modalidad==="fijo"?"precio fijo aplicado a los 12 meses":"precio indexado real de cada mes"),M,cy+4);
  cy+=7;
