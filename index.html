@@ -714,7 +714,7 @@ function zzTel(){
   // origen para exclusi\u00F3n: fibra (si porta) + m\u00F3viles (si porta)
   var origenes=[];if(fibAlta==="portabilidad"&&fibOri)origenes.push(fibOri);movs.forEach(function(m){if(m.a==="portabilidad"&&m.o)origenes.push(m.o)});
   var setMov=function(k,campo,val){var c=movs.slice();c[k]=Object.assign({},c[k],campo==="a"?{a:val,o:val==="alta"?"":c[k].o}:{o:val});sMovs(c);sSel(null)};
-  var addMov=function(){if(movs.length<8){sMovs(movs.concat([{a:"portabilidad",o:""}]));sSel(null)}};
+  var addMov=function(){if(movs.length<20){sMovs(movs.concat([{a:"portabilidad",o:""}]));sSel(null)}};
   var delMov=function(k){var c=movs.slice();c.splice(k,1);sMovs(c.length?c:[{a:"portabilidad",o:""}]);sSel(null)};
   var rank=_m(function(){
     if(!D)return[];var tax=+imp.tipo,res=[];
@@ -728,6 +728,7 @@ function zzTel(){
       if(qMovPlus&&(o.incluye_ott||"").indexOf("movistar_plus")<0)return;
       if(origenes.indexOf(o.compania)>=0)return;
       var lineasBase=o.lineas_moviles||0;
+      if(conv&&o.max_lineas!=null&&nLin>+o.max_lineas)return;
       var conIva=!o.pro,quita=function(p){return p==null?null:(conIva?(+p)/1.21:+p)};
       var baseDef=quita(o.precio),basePromo=o.precio_promo!=null?quita(o.precio_promo):null,pm=o.promo_meses||0;
       var basePromo2=o.precio_promo2!=null?quita(o.precio_promo2):null,pm2=o.promo2_meses||0;
@@ -736,7 +737,6 @@ function zzTel(){
       var propios=adicDe.filter(function(a){return zzApl(a,o)});
       if(conv&&nLin>lineasBase){
         var faltan=nLin-lineasBase;
-        if(o.max_adicionales!=null&&faltan>+o.max_adicionales)return;
         var poolA=propios.filter(function(a){return a.tipo==="movil_adicional"&&(a.pro==null||!!a.pro===!!o.pro)});
         if(o.adic_max_principal&&o.gb_linea)poolA=poolA.filter(function(a){return a.gb==null||+a.gb<=+o.gb_linea});
         if(!poolA.length)return;
@@ -844,7 +844,7 @@ function zzTel(){
           m.a==="portabilidad"&&o.createElement("div",{className:"oc-input-mini"},SELc(m.o,function(v){setMov(k,"o",v)},"\u00BFDe qu\u00E9 compa\u00F1\u00EDa?")),
           movs.length>1&&o.createElement("button",{className:"oc-linea-x",title:"Quitar",onClick:function(){delMov(k)}},"\u2715")
         )}),
-        movs.length<8&&o.createElement("button",{className:"oc-add-linea",onClick:addMov},"+ A\u00F1adir l\u00EDnea m\u00F3vil")
+        movs.length<20&&o.createElement("button",{className:"oc-add-linea",onClick:addMov},"+ A\u00F1adir l\u00EDnea m\u00F3vil")
       ),
       o.createElement("div",{className:"oc-fila oc-fila-check"},
         CK(qTV,sQTV,"TV"),CK(qNet,sQNet,"Netflix"),CK(qHBO,sQHBO,"HBO Max"),
@@ -961,7 +961,7 @@ function zzTelDet(row,imp,nt){
   cond.push(b.incluye_fijo?("Tel\u00E9fono fijo incluido"+(b.fijo_desc?" ("+b.fijo_desc+")":"")):"Sin tel\u00E9fono fijo");
   if(b.sva)cond.push("Servicios incluidos: "+b.sva);
   if(b.router)cond.push("Router "+b.router);
-  if(b.max_adicionales!=null)cond.push("M\u00E1ximo "+b.max_adicionales+" l\u00EDneas adicionales por paquete");
+  if(b.max_lineas!=null)cond.push("M\u00E1ximo "+b.max_lineas+" l\u00EDneas m\u00F3viles por paquete");
   (row.compl||[]).forEach(function(c){cond.push(c.nombre+": "+pv(c.precio)+"/mes (solo con este pack contratado en otra sede)")});
   if(row.desc>0)cond.push("Descuento aplicado: "+zzE(row.desc)+"/mes durante "+row.descM+" meses"+(row.descTxt?" \u00B7 "+row.descTxt:""));
   (row.descDisp||[]).forEach(function(r){if(!(row.desc>0&&r.descripcion===row.descTxt))cond.push(r.descripcion||("Descuento de "+r.importe+" \u20AC/mes durante "+r.meses+" meses si viene de "+r.ops))});
