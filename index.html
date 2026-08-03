@@ -825,7 +825,7 @@ function zzTel(){
         o.createElement("tbody",null,lista.map(function(row){var b=row.o,ah=nt-row.cuotaN,ahP=nt>0?(ah/nt*100):0;var rid=row.rid||b.id;return o.createElement(o.Fragment,{key:rid},
           o.createElement("tr",{className:"oc-fila-rank "+(sel===rid?"sel":""),onClick:function(){sSel(sel===rid?null:rid)}},
             o.createElement("td",{className:"oc-comp-td oc-col-comp"},zzTelLogos[b.compania]?o.createElement("img",{src:zzTelLogos[b.compania],className:"oc-logo-row oc-tlogo",alt:b.compania,loading:"lazy"}):b.compania),
-            o.createElement("td",{className:"oc-col-oferta"},b.nombre,row.vLabel?o.createElement("span",{className:"oc-variante"}," + "+row.vLabel):null,o.createElement("span",{className:"oc-sub-movil"},zzTags(b))),
+            o.createElement("td",{className:"oc-col-oferta"},zzNom(b),row.vLabel?o.createElement("span",{className:"oc-variante"}," + "+row.vLabel):null,o.createElement("span",{className:"oc-sub-movil"},zzTags(b))),
             o.createElement("td",{className:"oc-col-cuota"},o.createElement("div",{className:"oc-cuota-n"},zzE(row.cuotaN)),row.cuotaP!=null&&o.createElement("div",{className:"oc-cuota-p"},zzE(row.cuotaP),o.createElement("span",{className:"oc-cuota-m"}," \u00B7 "+row.pm+" meses")),o.createElement("div",{className:"oc-tot-movil"},zzE(row.tot1)+" / a\u00F1o")),
             o.createElement("td",{className:"oc-col-tot"},zzE(row.tot1)),
             o.createElement("td",{className:"oc-col-ahorro "+(ah>=0?"oc-pos":"oc-neg")},zzE(ah),o.createElement("span",{className:"oc-pct"}," ("+ahP.toFixed(1)+" %)")),
@@ -840,6 +840,12 @@ function zzTel(){
   ));
 }
 function zzTags(b){var t=[];if(b.fibra_mb)t.push((b.fibra_mb>=1000?"1 Gb":b.fibra_mb+" Mb"));else if(b.tecnologia==="5g")t.push("5G");if(b.lineas_moviles>0)t.push(b.lineas_moviles+"\u00D7"+(b.gb_linea?b.gb_linea+" Gb":"\u221E"));if(b.pro)t.push("PRO");if(b.segunda_residencia)t.push("2\u00AA res.");return t.join(" \u00B7 ")}
+function zzFib(b){return b.fibra_mb?(b.fibra_mb>=1000?(b.fibra_mb%1000===0?(b.fibra_mb/1000)+" Gb":b.fibra_mb+" Mb"):b.fibra_mb+" Mb"):""}
+function zzNom(b){
+  var n=String(b.nombre||""),v=zzFib(b);
+  if(!v||n.toLowerCase().indexOf(v.toLowerCase())>=0)return n;
+  var p=n.split(" \u00B7 ");p[0]=p[0]+" "+v;return p.join(" \u00B7 ");
+}
 function zzApl(a,o){
   if(a.red&&String(a.red)!==String(o.red))return !1;
   if(a.packs){
@@ -918,7 +924,7 @@ function zzTelDet(row,imp,nt){
   ad.filter(function(a){return a.tipo!=="fijo"&&a.tipo!=="tv"&&a.tipo!=="movil_adicional"}).forEach(function(a){cond.push(a.nombre+": "+pv(a.precio)+"/mes")});
   if(row.cuotaP!=null&&row.pm)cond.push("Promoci\u00F3n de "+row.pm+" meses; a partir del mes "+(row.pm+1)+" se paga la cuota normal");
   return o.createElement("div",{className:"oc-card"},
-    o.createElement("div",{className:"oc-res-cab"},o.createElement("h2",{className:"oc-h2"},b.compania+" \u00B7 "+b.nombre+(row.vLabel?" + "+row.vLabel:"")),o.createElement("div",{className:"oc-total"},zzE(row.cuotaN))),
+    o.createElement("div",{className:"oc-res-cab"},o.createElement("h2",{className:"oc-h2"},b.compania+" \u00B7 "+zzNom(b)+(row.vLabel?" + "+row.vLabel:"")),o.createElement("div",{className:"oc-total"},zzE(row.cuotaN))),
     o.createElement("table",{className:"oc-tabla oc-tabla-detalle"},o.createElement("tbody",null,rowsEl)),
     o.createElement("div",{className:"oc-cond"},
       o.createElement("h3",{className:"oc-cond-tit"},"Condiciones de la oferta"),
@@ -938,7 +944,7 @@ function zzTelPDF(row,imp,nt){
     try{var cl=zzTelLogos[b.compania];if(cl){var p2=doc.getImageProperties(cl),h2=12,w2=p2.width*h2/p2.height;doc.addImage(cl,"PNG",RX-w2,12,w2,h2)}}catch(e){}
     doc.setFont("helvetica","normal");doc.setFontSize(9);sC(GRY);doc.text(Xh(),RX,27,{align:"right"});
     cy=34;doc.setFont("helvetica","bold");doc.setFontSize(16);sC(PIZ);doc.text("Estudio de telecomunicaciones",M,cy);cy+=7;
-    doc.setFont("helvetica","normal");doc.setFontSize(11);sC(PIZ);doc.text(b.compania+" \u00B7 "+b.nombre,M,cy);cy+=8;
+    doc.setFont("helvetica","normal");doc.setFontSize(11);sC(PIZ);doc.text(b.compania+" \u00B7 "+zzNom(b)+(row.vLabel?" + "+row.vLabel:""),M,cy);cy+=8;
     function rrow(k,v,bd){doc.setFontSize(10);doc.setFont("helvetica",bd?"bold":"normal");sC(PIZ);doc.text(k,M,cy);doc.text(v,RX,cy,{align:"right"});sD(bd?PIZ:LN);doc.setLineWidth(bd?.4:.2);doc.line(M,cy+2.2,RX,cy+2.2);cy+=6.5}
     rrow("Cuota mensual ("+imp.nombre+" incluido)",zzE(row.cuotaN));
     if(row.cuotaP!=null)rrow("Cuota con promoci\u00F3n ("+row.pm+" meses)",zzE(row.cuotaP));
