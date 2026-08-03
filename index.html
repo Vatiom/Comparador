@@ -451,12 +451,12 @@ function sC(c){doc.setTextColor(c[0],c[1],c[2])}
 function sD(c){doc.setDrawColor(c[0],c[1],c[2])}
 function chk(sp){if(cy+sp>PH-14){doc.addPage();cy=16}}
 function logo(uri,al,ty,H){if(!uri)return;try{var pr=doc.getImageProperties(uri),w=pr.width*H/pr.height,x=al==="right"?RX-w:M;doc.addImage(uri,"PNG",x,ty,w,H)}catch(e){}}
-function h2(t){chk(12);doc.setFont("helvetica","bold");doc.setFontSize(11.5);sC(PIZ);doc.text(t,M,cy);sD(AMB);doc.setLineWidth(.5);doc.line(M,cy+1.5,RX,cy+1.5);cy+=6}
-function thead(hs,cs,as){chk(8);doc.setFont("helvetica","bold");doc.setFontSize(8);sC(GRY);for(var k=0;k<hs.length;k++)doc.text(hs[k],cs[k],cy,{align:as[k]==="r"?"right":"left"});sD(LN);doc.setLineWidth(.2);doc.line(M,cy+1.6,RX,cy+1.6);cy+=5;doc.setFont("helvetica","normal");doc.setFontSize(9.5);sC(PIZ)}
-function trow(vs,cs,as){chk(7);for(var k=0;k<vs.length;k++)doc.text(String(vs[k]),cs[k],cy,{align:as[k]==="r"?"right":"left"});sD(LN2);doc.setLineWidth(.2);doc.line(M,cy+1.6,RX,cy+1.6);cy+=5.5}
-function tsub(lb,vl){chk(7);doc.setFont("helvetica","bold");doc.setFontSize(9.5);sC(PIZ);doc.text(lb,M,cy);doc.text(vl,RX,cy,{align:"right"});sD(PIZ);doc.setLineWidth(.4);doc.line(M,cy+1.6,RX,cy+1.6);cy+=6;doc.setFont("helvetica","normal")}
-function dato(k,v){chk(8);doc.setFontSize(10);doc.setFont("helvetica","normal");sC(GRY);doc.text(k,M,cy);sC(PIZ);doc.text(String(v),72,cy);sD(LN);doc.setLineWidth(.2);doc.line(M,cy+2.4,RX,cy+2.4);cy+=7}
-function rrow(k,v,bd){chk(7);doc.setFontSize(10);doc.setFont("helvetica",bd?"bold":"normal");sC(PIZ);doc.text(k,M,cy);doc.text(v,RX,cy,{align:"right"});sD(bd?PIZ:LN2);doc.setLineWidth(bd?.4:.2);doc.line(M,cy+2.2,RX,cy+2.2);cy+=6.5}
+function h2(t){chk(12);doc.setFont("helvetica","bold");doc.setFontSize(11.5);sC(PIZ);doc.text(t,M,cy);sD(AMB);doc.setLineWidth(.5);doc.line(M,cy+1.5,RX,cy+1.5);cy+=5.5}
+function thead(hs,cs,as){chk(8);doc.setFont("helvetica","bold");doc.setFontSize(8);sC(GRY);for(var k=0;k<hs.length;k++)doc.text(hs[k],cs[k],cy,{align:as[k]==="r"?"right":"left"});sD(LN);doc.setLineWidth(.2);doc.line(M,cy+1.6,RX,cy+1.6);cy+=4.6;doc.setFont("helvetica","normal");doc.setFontSize(9.5);sC(PIZ)}
+function trow(vs,cs,as){chk(7);for(var k=0;k<vs.length;k++)doc.text(String(vs[k]),cs[k],cy,{align:as[k]==="r"?"right":"left"});sD(LN2);doc.setLineWidth(.2);doc.line(M,cy+1.6,RX,cy+1.6);cy+=5}
+function tsub(lb,vl){chk(7);doc.setFont("helvetica","bold");doc.setFontSize(9.5);sC(PIZ);doc.text(lb,M,cy);doc.text(vl,RX,cy,{align:"right"});sD(PIZ);doc.setLineWidth(.4);doc.line(M,cy+1.6,RX,cy+1.6);cy+=5.5;doc.setFont("helvetica","normal")}
+function dato(k,v){chk(8);doc.setFontSize(10);doc.setFont("helvetica","normal");sC(GRY);doc.text(k,M,cy);sC(PIZ);var tv=String(v),fs=10;doc.setFontSize(fs);while(fs>7&&doc.getTextWidth(tv)>RX-72){fs-=.5;doc.setFontSize(fs)}doc.text(tv,72,cy);doc.setFontSize(10);sD(LN);doc.setLineWidth(.2);doc.line(M,cy+2.4,RX,cy+2.4);cy+=6.5}
+function rrow(k,v,bd){chk(7);doc.setFontSize(10);doc.setFont("helvetica",bd?"bold":"normal");sC(PIZ);doc.text(k,M,cy);doc.text(v,RX,cy,{align:"right"});sD(bd?PIZ:LN2);doc.setLineWidth(bd?.4:.2);doc.line(M,cy+2.2,RX,cy+2.2);cy+=6}
 logo(zzLogos["Vatiom"],"left",12,9);
 logo(zzLogos[b.compania],"right",11,9);
 doc.setFont("helvetica","normal");doc.setFontSize(9);sC(GRY);doc.text(Xh(),RX,24,{align:"right"});
@@ -465,11 +465,11 @@ doc.setFont("helvetica","bold");doc.setFontSize(17);sC(PIZ);doc.text("Estudio de
 if(p){doc.setFont("helvetica","normal");doc.setFontSize(10);sC(PIZ);doc.text("Preparado para: "+p+(zzCups?"   \u00B7   CUPS: "+zzCups:""),M,cy);cy+=4}
 cy+=4;
 var zona=(Ei.find(function(q){return q[0]===a})||[])[1]||"";
-dato("Compa\u00F1\u00EDa",b.compania);
-dato("Oferta",b.oferta+" ("+(b.modalidad==="fijo"?"precio fijo":"indexado")+")");
-dato("Tarifa de acceso",i);
-dato("Zona",zona);
-dato("Periodo estudiado",y+" a "+r+" ("+dias+" d\u00EDas)");
+var zzMd=(b.modalidad==="fijo"?"precio fijo":"indexado");
+var zzOf=i+" \u00B7 "+b.compania+" \u00B7 "+b.oferta;
+if(String(b.oferta).toLowerCase().indexOf(b.modalidad==="fijo"?"fij":"index")<0)zzOf+=" ("+zzMd+")";
+dato("Oferta",zzOf);
+dato("Zona y periodo",zona+" \u00B7 "+y+" a "+r+" ("+dias+" d\u00EDas)");
 cy+=3;
 var pot=b.potDet.filter(function(q){return q.cantidad>0});
 if(pot.length){h2("T\u00E9rmino de potencia");var cP=[M,52,88,140,RX],aP=["l","l","l","l","r"];thead(["Periodo","Potencia","Precio \u20AC/kW\u00B7d\u00EDa","D\u00EDas","Importe"],cP,aP);pot.forEach(function(q){trow([q.periodo,q.cantidad+" kW",qe(q.precio),""+dias,X(q.importe)],cP,aP)});tsub("Subtotal potencia",X(b.potencia))}
@@ -489,9 +489,11 @@ rrow("Tu factura actual",X(nf));
 if(C>=0){chk(16);cy+=3;doc.setFillColor(PIZ[0],PIZ[1],PIZ[2]);doc.roundedRect(M,cy,RX-M,11,2,2,"F");var by=cy+7;var segs=[["Ahorro estimado: ",[255,255,255],false],[X(C)+" ("+Wp.toFixed(1)+" %)",AMB,true],[" en este periodo \u00B7 aprox. ",[255,255,255],false],[X(Nl),AMB,true],[" al a\u00F1o",[255,255,255],false]];doc.setFontSize(11);var tot=0;segs.forEach(function(sg){doc.setFont("helvetica",sg[2]?"bold":"normal");tot+=doc.getTextWidth(sg[0])});var xx=(PW-tot)/2;segs.forEach(function(sg){doc.setFont("helvetica",sg[2]?"bold":"normal");sC(sg[1]);doc.text(sg[0],xx,by);xx+=doc.getTextWidth(sg[0])});cy+=11}
 try{var zzS=zzSer(b);}catch(zzE2){var zzS=null}
 if(zzS){
- cy+=8;chk(64);
+ cy+=5;
+ var zzLibre=(PH-14)-cy-41;
+ if(zzLibre<18){chk(54);zzLibre=(PH-14)-cy-41}
  h2("Estimaci\u00F3n mes a mes con esta oferta");
- var gx=M+19,gw=RX-gx,gh=36,gy=cy+gh,mxv=0;
+ var gx=M+19,gw=RX-gx,gh=Math.max(18,Math.min(32,zzLibre)),gy=cy+gh,mxv=0;
  zzS.forEach(function(q){if(q.total>mxv)mxv=q.total});
  var esc=mxv>0?mxv*1.15:1;
  doc.setFont("helvetica","normal");doc.setFontSize(6.5);
@@ -505,17 +507,17 @@ if(zzS){
   doc.text(zzMN[+q.mes.slice(5,7)-1]+" "+q.mes.slice(2,4),bx+bb/2,gy+3.6,{align:"center"});
  });
  sD(PIZ);doc.setLineWidth(.3);doc.line(gx,gy,RX,gy);
- cy=gy+9;
+ cy=gy+8;
  var sum=0;zzS.forEach(function(q){sum+=(q.total||0)});
  doc.setFont("helvetica","bold");doc.setFontSize(9);sC(PIZ);
  doc.text("Total estimado 12 meses: "+X(sum),M,cy);
  doc.setFont("helvetica","normal");doc.setFontSize(7.5);sC(GRY);
  doc.text("Impuestos incluidos \u00B7 "+(b.modalidad==="fijo"?"precio fijo aplicado a los 12 meses":"precio indexado real de cada mes"),M,cy+4);
- cy+=9;
+ cy+=7;
 }
-cy+=6;chk(24);doc.setFont("helvetica","normal");doc.setFontSize(7.5);sC(GRY);
+cy+=5;doc.setFont("helvetica","normal");doc.setFontSize(7.5);sC(GRY);
 var pie="Estudio orientativo elaborado a partir de los datos de la factura facilitada por el cliente. El resultado puede variar en funci\u00F3n de los h\u00E1bitos de consumo del suministro. Las ofertas de precio fijo est\u00E1n sujetas a modificaci\u00F3n por parte de las comercializadoras sin previo aviso, por lo que no puede garantizarse su vigencia en el tiempo.";
-doc.text(doc.splitTextToSize(pie,RX-M),M,cy);
+var zzPl=doc.splitTextToSize(pie,RX-M);chk(zzPl.length*3.1+3);doc.text(zzPl,M,cy);
 var nom=(p?String(p).replace(/[^0-9A-Za-z -]/g,"").trim():"")||"estudio";
 doc.save("Estudio "+nom+".pdf");
 }catch(e){if(window.console&&console.error)console.error(e);setTimeout(function(){window.print()},100)}
