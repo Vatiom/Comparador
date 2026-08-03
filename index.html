@@ -727,13 +727,19 @@ function zzTel(){
       var lineasBase=o.lineas_moviles||0;
       var conIva=!o.pro,quita=function(p){return p==null?null:(conIva?(+p)/1.21:+p)};
       var baseDef=quita(o.precio),basePromo=o.precio_promo!=null?quita(o.precio_promo):null,pm=o.promo_meses||0;
+      var basePromo2=o.precio_promo2!=null?quita(o.precio_promo2):null,pm2=o.promo2_meses||0;
       var addDef=0,detAdd=[],adicDe=(D.adic||[]).filter(function(a){return a.compania===o.compania});
       var addOne=function(a,q){if(!a)return;var p=(conIva?(+a.precio)/1.21:+a.precio)*(q||1);addDef+=p;detAdd.push({n:(q>1?q+"\u00D7 ":"")+a.nombre,p:p})};
       var propios=adicDe.filter(function(a){return zzApl(a,o)});
       if(conv&&nLin>lineasBase){
         var faltan=nLin-lineasBase;
-        var ad=propios.filter(function(a){return a.tipo==="movil_adicional"&&(a.precio>0)}).sort(function(x,y){return x.precio-y.precio});
-        if(ad[0])addOne(ad[0],faltan);
+        var poolA=propios.filter(function(a){return a.tipo==="movil_adicional"&&(a.pro==null||!!a.pro===!!o.pro)});
+        if(o.gb_linea)poolA=poolA.filter(function(a){return a.gb==null||+a.gb<=+o.gb_linea});
+        var gratis=poolA.filter(function(a){return +a.precio===0}).sort(function(x,y){return (y.gb||0)-(x.gb||0)})[0];
+        var pago=poolA.filter(function(a){return +a.precio>0}).sort(function(x,y){return x.precio-y.precio})[0];
+        var quedan=faltan;
+        if(gratis){var ng=Math.min(quedan,gratis.max_unidades||1);if(ng>0){addOne(gratis,ng);quedan-=ng}}
+        if(quedan>0&&pago)addOne(pago,quedan);
       }
       // opciones de fijo y de TV: cada combinacion es una fila del ranking
       var ott=String(o.incluye_ott||"");
@@ -764,11 +770,27 @@ function zzTel(){
         var extra=0,det=detAdd.slice(),et=[],conPack=!1;
         c.forEach(function(v){extra+=v.p;if(v.n){det.push({n:v.n,p:v.p});et.push(v.et)}if(v.pack&&v.n)conPack=!0});
         var reg=(conPack&&o.gb_regalo>0)?o.gb_regalo:0;
-        var cuotaN=(baseDef+addDef+extra)*(1+tax);
-        var cuotaP=basePromo!=null?((basePromo+addDef+extra)*(1+tax)):null;
-        var tot1=(cuotaP!=null&&pm>0)?(pm*cuotaP+(12-pm)*cuotaN):(12*cuotaN);
-        res.push({o:o,rid:o.id+"#"+ci,vLabel:et.join(" + "),adic:propios,regalo:reg,
-          cuotaN:cuotaN,cuotaP:cuotaP,pm:pm,tot1:tot1,addDet:det,
+        var dc=0,dcm=0;
+        if(o.desc_cond>0&&o.desc_cond_ops){
+          var ops=String(o.desc_cond_ops).split(",").map(function(x){return x.trim().toLowerCase()});
+          if(origenes.some(function(x){return ops.indexOf(String(x).toLowerCase())>=0})){dc=quita(o.desc_cond);dcm=o.desc_cond_meses||12}
+        }
+        var tramos=[],usados=0;
+        if(basePromo!=null&&pm>0){tramos.push({m:pm,p:basePromo});usados+=pm}
+        if(basePromo2!=null&&pm2>0){tramos.push({m:pm2,p:basePromo2});usados+=pm2}
+        if(usados<12)tramos.push({m:12-usados,p:baseDef});
+        var cuotaN=(baseDef+addDef+extra)*(1+tax),tot1=0,mes=0,trm=[];
+        tramos.forEach(function(t){
+          var conD=0,sinD=0;
+          for(var k=0;k<t.m;k++){mes++;var d=(mes<=dcm)?dc:0;var v=(t.p+addDef+extra-d)*(1+tax);tot1+=v;if(d>0)conD++;else sinD++}
+          var pc=(t.p+addDef+extra-dc)*(1+tax),ps=(t.p+addDef+extra)*(1+tax);
+          if(conD>0)trm.push({m:conD,p:pc});
+          if(sinD>0)trm.push({m:sinD,p:ps});
+        });
+        trm=trm.filter(function(t){return Math.abs(t.p-cuotaN)>0.005});
+        var cuotaP=trm.length?trm[0].p:null,pmv=trm.length?trm[0].m:0;
+        res.push({o:o,rid:o.id+"#"+ci,vLabel:et.join(" + "),adic:propios,regalo:reg,tramos:trm,desc:dc>0?dc*(1+tax):0,descM:dcm,
+          cuotaN:cuotaN,cuotaP:cuotaP,pm:pmv,tot1:tot1,addDet:det,
           comi:comi.total,comiDet:comi.det,tax:tax});
       });
     });
@@ -835,7 +857,7 @@ function zzTel(){
           o.createElement("tr",{className:"oc-fila-rank "+(sel===rid?"sel":""),onClick:function(){sSel(sel===rid?null:rid)}},
             o.createElement("td",{className:"oc-comp-td oc-col-comp"},zzTelLogos[b.compania]?o.createElement("img",{src:zzTelLogos[b.compania],className:"oc-logo-row oc-tlogo",alt:b.compania,loading:"lazy"}):b.compania),
             o.createElement("td",{className:"oc-col-oferta"},zzNom(b),row.vLabel?o.createElement("span",{className:"oc-variante"}," + "+row.vLabel):null,o.createElement("span",{className:"oc-sub-movil"},zzTags(b))),
-            o.createElement("td",{className:"oc-col-cuota"},o.createElement("div",{className:"oc-cuota-n"},zzE(row.cuotaN)),row.cuotaP!=null&&o.createElement("div",{className:"oc-cuota-p"},zzE(row.cuotaP),o.createElement("span",{className:"oc-cuota-m"}," \u00B7 "+row.pm+" meses")),o.createElement("div",{className:"oc-tot-movil"},zzE(row.tot1)+" / a\u00F1o")),
+            o.createElement("td",{className:"oc-col-cuota"},o.createElement("div",{className:"oc-cuota-n"},zzE(row.cuotaN)),(row.tramos||[]).map(function(t,k){return o.createElement("div",{className:"oc-cuota-p",key:k},zzE(t.p),o.createElement("span",{className:"oc-cuota-m"}," \u00B7 "+t.m+(t.m===1?" mes":" meses")))}),o.createElement("div",{className:"oc-tot-movil"},zzE(row.tot1)+" / a\u00F1o")),
             o.createElement("td",{className:"oc-col-tot"},zzE(row.tot1)),
             o.createElement("td",{className:"oc-col-ahorro "+(ah>=0?"oc-pos":"oc-neg")},zzE(ah),o.createElement("span",{className:"oc-pct"}," ("+ahP.toFixed(1)+" %)")),
             o.createElement("td",{className:"oc-col-comi"},row.comi==null?"\u2014":zzE(row.comi))),
@@ -912,7 +934,7 @@ function zzComi(D,o,ctx){
 function zzTelDet(row,imp,nt){
   var b=row.o,tax=+row.tax,lin=[];
   lin.push(["Cuota mensual ("+imp.nombre+" incl.)",zzE(row.cuotaN)]);
-  if(row.cuotaP!=null)lin.push(["Cuota con promoci\u00F3n ("+row.pm+" meses)",zzE(row.cuotaP)]);
+  (row.tramos||[]).forEach(function(t){lin.push(["Cuota durante "+t.m+(t.m===1?" mes":" meses"),zzE(t.p)])});
   lin.push(["Total primer a\u00F1o",zzE(row.tot1)]);
   row.addDet.forEach(function(a){lin.push(["+ "+a.n,zzE(a.p*(1+tax))])});
   if(row.regalo>0)lin.push(["Gb de regalo por el pack contratado","+"+row.regalo+" Gb en cada l\u00EDnea m\u00F3vil"]);
@@ -923,18 +945,21 @@ function zzTelDet(row,imp,nt){
   if(b.fibra_mb)cond.push("Fibra "+(b.fibra_mb>=1000?(b.fibra_mb/1000)+" Gb":b.fibra_mb+" Mb"));
   if(b.lineas_moviles>0)cond.push(b.lineas_moviles+" l\u00EDnea"+(b.lineas_moviles>1?"s":"")+" m\u00F3vil"+(b.lineas_moviles>1?"es":"")+(b.gb_linea?" de "+b.gb_linea+" Gb":" con Gb ilimitados"));
   if(b.incluye_ott)cond.push("Incluye "+String(b.incluye_ott).split(",").join(", "));
-  cond.push(b.incluye_fijo?"Tel\u00E9fono fijo incluido":"Sin tel\u00E9fono fijo");
+  cond.push(b.incluye_fijo?("Tel\u00E9fono fijo incluido"+(b.fijo_desc?" ("+b.fijo_desc+")":"")):"Sin tel\u00E9fono fijo");
+  if(b.sva)cond.push("Servicios incluidos: "+b.sva);
+  if(b.router)cond.push("Router "+b.router);
+  if(row.desc>0)cond.push("Descuento aplicado de "+zzE(row.desc)+"/mes durante "+row.descM+" meses por venir de "+String(b.desc_cond_ops).split(",").join(", "));
+  else if(b.desc_cond>0)cond.push("Descuento de "+zzE(b.desc_cond)+"/mes durante "+(b.desc_cond_meses||12)+" meses si la l\u00EDnea fija o m\u00F3vil vienen de "+String(b.desc_cond_ops).split(",").join(", "));
   var fj=ad.filter(function(a){return a.tipo==="fijo"});
   if(!b.incluye_fijo&&fj.length)fj.forEach(function(a){cond.push("Fijo opcional: "+a.nombre+" por "+pv(a.precio)+"/mes")});
   var tv=ad.filter(function(a){return a.tipo==="tv"});
   if(b.incluye_tv)cond.push("TV incluida");
   else tv.forEach(function(a){cond.push("TV opcional: "+a.nombre+" por "+pv(a.precio)+"/mes"+(a.requiere?" (requiere "+a.requiere+")":""))});
   var ma=ad.filter(function(a){return a.tipo==="movil_adicional"});
-  ma.forEach(function(a){cond.push("L\u00EDnea adicional "+(a.gb?a.gb+" Gb":"ilimitada")+": "+pv(a.precio)+"/mes"+(a.max_unidades?" (m\u00E1x. "+a.max_unidades+")":""))});
+  ma.forEach(function(a){cond.push("L\u00EDnea adicional "+(a.gb==null?"ilimitada":(+a.gb===0?"0 Gb (comparte los de la principal)":a.gb+" Gb"))+": "+pv(a.precio)+"/mes"+(a.max_unidades?" (m\u00E1x. "+a.max_unidades+")":""))});
   ad.filter(function(a){return a.tipo==="ott"}).forEach(function(a){cond.push("Pack opcional "+a.nombre+": "+pv(a.precio)+"/mes")});
   ad.filter(function(a){return ["fijo","tv","ott","movil_adicional"].indexOf(a.tipo)<0}).forEach(function(a){cond.push(a.nombre+": "+pv(a.precio)+"/mes")});
   if(b.gb_regalo>0)cond.push("Al contratar cualquier pack de TV: +"+b.gb_regalo+" Gb en cada l\u00EDnea m\u00F3vil (una sola vez, aunque se contraten varios packs)");
-  if(row.cuotaP!=null&&row.pm)cond.push("Promoci\u00F3n de "+row.pm+" meses; a partir del mes "+(row.pm+1)+" se paga la cuota normal");
   return o.createElement("div",{className:"oc-card"},
     o.createElement("div",{className:"oc-res-cab"},o.createElement("h2",{className:"oc-h2"},b.compania+" \u00B7 "+zzNom(b)+(row.vLabel?" + "+row.vLabel:"")),o.createElement("div",{className:"oc-total"},zzE(row.cuotaN))),
     o.createElement("table",{className:"oc-tabla oc-tabla-detalle"},o.createElement("tbody",null,rowsEl)),
