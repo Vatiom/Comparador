@@ -717,7 +717,9 @@ function zzTel(){
   var delMov=function(k){var c=movs.slice();c.splice(k,1);sMovs(c.length?c:[{a:"portabilidad",o:""}]);sSel(null)};
   var rank=_m(function(){
     if(!D)return[];var tax=+imp.tipo,res=[];
+    var compl=(D.ofertas||[]).filter(function(x){return x.solo_complemento});
     D.ofertas.forEach(function(o){
+      if(o.solo_complemento)return;
       if((o.zonas||"").indexOf(zona)<0)return;
       if(modo==="solo_fibra"&&o.tipo!=="solo_fibra")return;
       if(conv&&o.tipo!=="convergente")return;
@@ -789,7 +791,8 @@ function zzTel(){
         });
         trm=trm.filter(function(t){return Math.abs(t.p-cuotaN)>0.005});
         var cuotaP=trm.length?trm[0].p:null,pmv=trm.length?trm[0].m:0;
-        res.push({o:o,rid:o.id+"#"+ci,vLabel:et.join(" + "),adic:propios,regalo:reg,tramos:trm,desc:dc>0?dc*(1+tax):0,descM:dcm,
+        res.push({o:o,rid:o.id+"#"+ci,vLabel:et.join(" + "),adic:propios,regalo:reg,
+          compl:compl.filter(function(x){return x.compania===o.compania&&!!x.pro===!!o.pro}),tramos:trm,desc:dc>0?dc*(1+tax):0,descM:dcm,
           cuotaN:cuotaN,cuotaP:cuotaP,pm:pmv,tot1:tot1,addDet:det,
           comi:comi.total,comiDet:comi.det,tax:tax});
       });
@@ -948,6 +951,7 @@ function zzTelDet(row,imp,nt){
   cond.push(b.incluye_fijo?("Tel\u00E9fono fijo incluido"+(b.fijo_desc?" ("+b.fijo_desc+")":"")):"Sin tel\u00E9fono fijo");
   if(b.sva)cond.push("Servicios incluidos: "+b.sva);
   if(b.router)cond.push("Router "+b.router);
+  (row.compl||[]).forEach(function(c){cond.push(c.nombre+": "+pv(c.precio)+"/mes (solo con este pack contratado en otra sede)")});
   if(row.desc>0)cond.push("Descuento aplicado de "+zzE(row.desc)+"/mes durante "+row.descM+" meses por venir de "+String(b.desc_cond_ops).split(",").join(", "));
   else if(b.desc_cond>0)cond.push("Descuento de "+zzE(b.desc_cond)+"/mes durante "+(b.desc_cond_meses||12)+" meses si la l\u00EDnea fija o m\u00F3vil vienen de "+String(b.desc_cond_ops).split(",").join(", "));
   var fj=ad.filter(function(a){return a.tipo==="fijo"});
