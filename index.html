@@ -729,12 +729,12 @@ function zzTel(){
       var addDef=0,detAdd=[],adicDe=(D.adic||[]).filter(function(a){return a.compania===o.compania});
       var addOne=function(a,q){if(!a)return;var p=(conIva?(+a.precio)/1.21:+a.precio)*(q||1);addDef+=p;detAdd.push({n:(q>1?q+"\u00D7 ":"")+a.nombre,p:p})};
       var optOK=!0;
-      if(qFijo&&!o.incluye_fijo){var fj=adicDe.filter(function(a){return a.tipo==="fijo"&&(a.pro==null||!!a.pro===!!o.pro)}).sort(function(x,y){return x.precio-y.precio});if(!fj.length)optOK=!1;else addOne(fijoTipo==="ilimitado"?fj[fj.length-1]:fj[0],1)}
-      if(qTV&&!o.incluye_tv){var tvA=adicDe.filter(function(a){return a.tipo==="tv"&&(a.pro==null||!!a.pro===!!o.pro)}).sort(function(x,y){return x.precio-y.precio});if(!tvA.length)optOK=!1;else addOne(tvA[0],1)}
+      if(qFijo&&!o.incluye_fijo){var fj=adicDe.filter(function(a){return a.tipo==="fijo"&&(a.pro==null||!!a.pro===!!o.pro)&&zzApl(a,o)}).sort(function(x,y){return x.precio-y.precio});if(!fj.length)optOK=!1;else addOne(fijoTipo==="ilimitado"?fj[fj.length-1]:fj[0],1)}
+      if(qTV&&!o.incluye_tv){var tvA=adicDe.filter(function(a){return a.tipo==="tv"&&(a.pro==null||!!a.pro===!!o.pro)&&zzApl(a,o)}).sort(function(x,y){return x.precio-y.precio});if(!tvA.length)optOK=!1;else addOne(tvA[0],1)}
       if(!optOK)return;
       if(conv&&nLin>lineasBase){
         var faltan=nLin-lineasBase;
-        var ad=adicDe.filter(function(a){return a.tipo==="movil_adicional"&&(a.precio>0)}).sort(function(x,y){return x.precio-y.precio});
+        var ad=adicDe.filter(function(a){return a.tipo==="movil_adicional"&&(a.precio>0)&&zzApl(a,o)}).sort(function(x,y){return x.precio-y.precio});
         if(ad[0])addOne(ad[0],faltan);
       }
             var cuotaN=(baseDef+addDef)*(1+tax);
@@ -822,9 +822,18 @@ function zzTel(){
   ));
 }
 function zzTags(b){var t=[];if(b.fibra_mb)t.push((b.fibra_mb>=1000?"1 Gb":b.fibra_mb+" Mb"));else if(b.tecnologia==="5g")t.push("5G");if(b.lineas_moviles>0)t.push(b.lineas_moviles+"\u00D7"+(b.gb_linea?b.gb_linea+" Gb":"\u221E"));if(b.pro)t.push("PRO");if(b.segunda_residencia)t.push("2\u00AA res.");return t.join(" \u00B7 ")}
-function zzExtra(comp,adic,faltan,conIva,pro){
+function zzApl(a,o){
+  if(a.red&&String(a.red)!==String(o.red))return !1;
+  if(a.packs){
+    var nm=String(o.nombre||"").toLowerCase().replace(/\u00ED/g,"i");
+    var ok=String(a.packs).split(",").some(function(t){t=t.trim().toLowerCase();return t&&nm.indexOf(t)>=0});
+    if(!ok)return !1;
+  }
+  return !0;
+}
+function zzExtra(comp,adic,faltan,conIva,pro,o){
   // elige adicionales respetando topes especiales (MasMovil 0Gb x1, Yoigo DUO)
-  var out=[],pool=adic.filter(function(a){return a.compania===comp&&a.tipo==="movil_adicional"});
+  var out=[],pool=adic.filter(function(a){return a.compania===comp&&a.tipo==="movil_adicional"&&(!o||zzApl(a,o))});
   var pr=function(p){return conIva?(+p)/1.21:+p};
   if(comp==="Yoigo"){
     var duo=pool.find(function(a){return /duo/i.test(a.nombre)&&a.pro===pro});
