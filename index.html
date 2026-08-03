@@ -462,12 +462,12 @@ logo(zzLogos[b.compania],"right",11,9);
 doc.setFont("helvetica","normal");doc.setFontSize(9);sC(GRY);doc.text(Xh(),RX,24,{align:"right"});
 cy=34;
 doc.setFont("helvetica","bold");doc.setFontSize(17);sC(PIZ);doc.text("Estudio de ahorro \u00B7 "+(l==="luz"?"Electricidad":"Gas"),M,cy);cy+=7;
-if(p){doc.setFont("helvetica","normal");doc.setFontSize(10);sC(PIZ);doc.text("Preparado para: "+p+(zzCups?"   \u00B7   CUPS: "+zzCups:""),M,cy);cy+=4}
 cy+=4;
 var zona=(Ei.find(function(q){return q[0]===a})||[])[1]||"";
 var zzMd=(b.modalidad==="fijo"?"precio fijo":"indexado");
 var zzOf=i+" \u00B7 "+b.compania+" \u00B7 "+b.oferta;
 if(String(b.oferta).toLowerCase().indexOf(b.modalidad==="fijo"?"fij":"index")<0)zzOf+=" ("+zzMd+")";
+if(p||zzCups)dato(p&&zzCups?"Cliente y CUPS":(p?"Cliente":"CUPS"),p&&zzCups?p+" \u00B7 "+zzCups:(p||zzCups));
 dato("Oferta",zzOf);
 dato("Zona y periodo",zona+" \u00B7 "+y+" a "+r+" ("+dias+" d\u00EDas)");
 cy+=3;
