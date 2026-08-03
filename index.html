@@ -685,6 +685,7 @@ async function zzTload(){
   r.oper=await Ye("tel_operadores?select=*&order=nombre.asc");
   r.comp=await Ye("tel_companias?select=*&order=orden.asc");
   r.reglas=await Ye("tel_reglas_comision?select=*&activa=eq.true");
+  r.desc=await Ye("tel_descuentos?select=*&activa=eq.true");
   r.imp=await Ye("tel_impuestos?select=*");return r;
 }
 function zzTel(){
@@ -772,11 +773,17 @@ function zzTel(){
         var extra=0,det=detAdd.slice(),et=[],conPack=!1;
         c.forEach(function(v){extra+=v.p;if(v.n){det.push({n:v.n,p:v.p});et.push(v.et)}if(v.pack&&v.n)conPack=!0});
         var reg=(conPack&&o.gb_regalo>0)?o.gb_regalo:0;
-        var dc=0,dcm=0;
-        if(o.desc_cond>0&&o.desc_cond_ops){
-          var ops=String(o.desc_cond_ops).split(",").map(function(x){return x.trim().toLowerCase()});
-          if(origenes.some(function(x){return ops.indexOf(String(x).toLowerCase())>=0})){dc=quita(o.desc_cond);dcm=o.desc_cond_meses||12}
-        }
+        var dc=0,dcm=0,dcTxt="";
+        (D.desc||[]).forEach(function(r){
+          if(r.compania!==o.compania)return;
+          if(r.pro!=null&&!!r.pro!==!!o.pro)return;
+          if(r.tipo&&r.tipo!==o.tipo)return;
+          if(r.gb_min!=null&&!(+(o.gb_linea||0)>=+r.gb_min))return;
+          var ops=String(r.ops||"").split(",").map(function(x){return x.trim().toLowerCase()});
+          if(!origenes.some(function(x){return ops.indexOf(String(x).toLowerCase())>=0}))return;
+          if(+r.importe>dc){dc=+r.importe;dcm=r.meses||12;dcTxt=r.descripcion||""}
+        });
+        if(dc>0)dc=quita(dc);
         var tramos=[],usados=0;
         if(basePromo!=null&&pm>0){tramos.push({m:pm,p:basePromo});usados+=pm}
         if(basePromo2!=null&&pm2>0){tramos.push({m:pm2,p:basePromo2});usados+=pm2}
@@ -792,7 +799,8 @@ function zzTel(){
         trm=trm.filter(function(t){return Math.abs(t.p-cuotaN)>0.005});
         var cuotaP=trm.length?trm[0].p:null,pmv=trm.length?trm[0].m:0;
         res.push({o:o,rid:o.id+"#"+ci,vLabel:et.join(" + "),adic:propios,regalo:reg,
-          compl:compl.filter(function(x){return x.compania===o.compania&&!!x.pro===!!o.pro}),tramos:trm,desc:dc>0?dc*(1+tax):0,descM:dcm,
+          compl:compl.filter(function(x){return x.compania===o.compania&&!!x.pro===!!o.pro}),tramos:trm,desc:dc>0?dc*(1+tax):0,descM:dcm,descTxt:dcTxt,
+          descDisp:(D.desc||[]).filter(function(r){return r.compania===o.compania&&(r.pro==null||!!r.pro===!!o.pro)&&(!r.tipo||r.tipo===o.tipo)&&(r.gb_min==null||+(o.gb_linea||0)>=+r.gb_min)}),
           cuotaN:cuotaN,cuotaP:cuotaP,pm:pmv,tot1:tot1,addDet:det,
           comi:comi.total,comiDet:comi.det,tax:tax});
       });
@@ -952,8 +960,8 @@ function zzTelDet(row,imp,nt){
   if(b.sva)cond.push("Servicios incluidos: "+b.sva);
   if(b.router)cond.push("Router "+b.router);
   (row.compl||[]).forEach(function(c){cond.push(c.nombre+": "+pv(c.precio)+"/mes (solo con este pack contratado en otra sede)")});
-  if(row.desc>0)cond.push("Descuento aplicado de "+zzE(row.desc)+"/mes durante "+row.descM+" meses por venir de "+String(b.desc_cond_ops).split(",").join(", "));
-  else if(b.desc_cond>0)cond.push("Descuento de "+zzE(b.desc_cond)+"/mes durante "+(b.desc_cond_meses||12)+" meses si la l\u00EDnea fija o m\u00F3vil vienen de "+String(b.desc_cond_ops).split(",").join(", "));
+  if(row.desc>0)cond.push("Descuento aplicado: "+zzE(row.desc)+"/mes durante "+row.descM+" meses"+(row.descTxt?" \u00B7 "+row.descTxt:""));
+  (row.descDisp||[]).forEach(function(r){if(!(row.desc>0&&r.descripcion===row.descTxt))cond.push(r.descripcion||("Descuento de "+r.importe+" \u20AC/mes durante "+r.meses+" meses si viene de "+r.ops))});
   var fj=ad.filter(function(a){return a.tipo==="fijo"});
   if(!b.incluye_fijo&&fj.length)fj.forEach(function(a){cond.push("Fijo opcional: "+a.nombre+" por "+pv(a.precio)+"/mes")});
   var tv=ad.filter(function(a){return a.tipo==="tv"});
