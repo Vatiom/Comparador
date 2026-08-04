@@ -729,6 +729,12 @@ function zzTel(){
       if(origenes.indexOf(o.compania)>=0)return;
       var lineasBase=o.lineas_moviles||0;
       if(conv&&o.max_lineas!=null&&nLin>+o.max_lineas)return;
+      var hayPort=(fibAlta==="portabilidad")||(conv&&movs.some(function(m){return m.a==="portabilidad"}));
+      if(o.requiere_portabilidad&&!hayPort)return;
+      if(o.requiere_ops){
+        var rq=String(o.requiere_ops).split(",").map(function(x){return x.trim().toLowerCase()});
+        if(!origenes.some(function(x){return rq.indexOf(String(x).toLowerCase())>=0}))return;
+      }
       var conIva=!o.pro,quita=function(p){return p==null?null:(conIva?(+p)/1.21:+p)};
       var baseDef=quita(o.precio),basePromo=o.precio_promo!=null?quita(o.precio_promo):null,pm=o.promo_meses||0;
       var basePromo2=o.precio_promo2!=null?quita(o.precio_promo2):null,pm2=o.promo2_meses||0;
@@ -795,8 +801,11 @@ function zzTel(){
           if(r.compania!==o.compania)return;
           if(r.pro!=null&&!!r.pro!==!!o.pro)return;
           if(r.tipo&&r.tipo!==o.tipo)return;
-          if(r.gb_min!=null&&!(+(o.gb_linea||0)>=+r.gb_min))return;
+          if(r.gb_min!=null){var ilim=(o.gb_linea==null);if(!((ilim&&r.incluye_ilimitado)||(!ilim&&+o.gb_linea>=+r.gb_min)))return}
           if(r.solo_ilimitado&&o.gb_linea!=null)return;
+          if(r.sin_ott&&String(o.incluye_ott||""))return;
+          if(r.lineas!=null&&+(o.lineas_moviles||0)!==+r.lineas)return;
+          if(r.requiere_portabilidad&&!hayPort)return;
           if(r.ops){
             var ops=String(r.ops).split(",").map(function(x){return x.trim().toLowerCase()});
             if(!origenes.some(function(x){return ops.indexOf(String(x).toLowerCase())>=0}))return;
@@ -826,7 +835,11 @@ function zzTel(){
         var cfac=(o.comision_factor==null?1:+o.comision_factor);
         res.push({o:o,rid:o.id+"#"+ci,vLabel:et.join(" + "),adic:propios,regalo:reg,
           compl:compl.filter(function(x){return x.compania===o.compania&&!!x.pro===!!o.pro}),tramos:trm,desc:dc>0?dc*(1+tax):0,descM:dcm,descTxt:dcTxt,descInd:dcInd,
-          descDisp:(D.desc||[]).filter(function(r){return r.compania===o.compania&&(r.pro==null||!!r.pro===!!o.pro)&&(!r.tipo||r.tipo===o.tipo)&&(r.gb_min==null||+(o.gb_linea||0)>=+r.gb_min)&&!(r.solo_ilimitado&&o.gb_linea!=null)}),
+          descDisp:(D.desc||[]).filter(function(r){var il=(o.gb_linea==null);
+            return r.compania===o.compania&&(r.pro==null||!!r.pro===!!o.pro)&&(!r.tipo||r.tipo===o.tipo)
+              &&(r.gb_min==null||((il&&r.incluye_ilimitado)||(!il&&+o.gb_linea>=+r.gb_min)))
+              &&!(r.solo_ilimitado&&!il)&&!(r.sin_ott&&String(o.incluye_ott||""))
+              &&(r.lineas==null||+(o.lineas_moviles||0)===+r.lineas)}),
           cuotaN:cuotaN,cuotaP:cuotaP,pm:pmv,tot1:tot1,addDet:det,
           comi:comi.total==null?null:comi.total*cfac,comiDet:comi.det,tax:tax});
       });
@@ -991,6 +1004,8 @@ function zzTelDet(row,imp,nt){
   cond.push(b.incluye_fijo?("Tel\u00E9fono fijo incluido"+(b.fijo_desc?" ("+b.fijo_desc+")":"")):"Sin tel\u00E9fono fijo");
   if(b.sva)cond.push("Servicios incluidos: "+b.sva);
   if(b.router)cond.push("Router "+b.router);
+  if(b.requiere_portabilidad)cond.push("Solo contratable con portabilidad de la l\u00EDnea fija o m\u00F3vil");
+  if(b.requiere_ops)cond.push("La l\u00EDnea debe venir de "+String(b.requiere_ops).split(",").join(", "));
   if(b.max_lineas!=null)cond.push("M\u00E1ximo "+b.max_lineas+" l\u00EDneas m\u00F3viles por paquete");
   if(b.adic_igual_principal)cond.push("Las l\u00EDneas adicionales deben ser iguales a la principal");
   if(b.adic_promo_precio!=null&&b.adic_promo_max>0)cond.push("Promoci\u00F3n: las "+b.adic_promo_max+" primeras l\u00EDneas adicionales a "+pv(b.adic_promo_precio)+"/mes");
