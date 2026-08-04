@@ -966,9 +966,11 @@ function zzTelDet(row,imp,nt){
   var ahorro=nt>0?(nt-row.cuotaN):null;
   var ad=row.adic||[],pv=function(p){return zzE((+p)*(b.pro?(1+tax):1))};
   var cond=[];
+  var zzOTT={netflix:"Netflix",max:"Max",hbo:"HBO Max",prime:"Amazon Prime",disney:"Disney+",movistar_plus:"Movistar Plus"};
   if(b.fibra_mb)cond.push("Fibra "+(b.fibra_mb>=1000?(b.fibra_mb/1000)+" Gb":b.fibra_mb+" Mb"));
+  else if(b.tecnologia==="5g")cond.push("Acceso 5G (sin fibra)");
   if(b.lineas_moviles>0)cond.push(b.lineas_moviles+" l\u00EDnea"+(b.lineas_moviles>1?"s":"")+" m\u00F3vil"+(b.lineas_moviles>1?"es":"")+(b.gb_linea?" de "+b.gb_linea+" Gb":" con Gb ilimitados"));
-  if(b.incluye_ott)cond.push("Incluye "+String(b.incluye_ott).split(",").join(", "));
+  if(b.incluye_ott)cond.push("Incluye "+String(b.incluye_ott).split(",").map(function(x){x=x.trim();return zzOTT[x]||x}).join(", "));
   cond.push(b.incluye_fijo?("Tel\u00E9fono fijo incluido"+(b.fijo_desc?" ("+b.fijo_desc+")":"")):"Sin tel\u00E9fono fijo");
   if(b.sva)cond.push("Servicios incluidos: "+b.sva);
   if(b.router)cond.push("Router "+b.router);
@@ -984,6 +986,8 @@ function zzTelDet(row,imp,nt){
   if(b.incluye_tv)cond.push("TV incluida");
   else tv.forEach(function(a){cond.push("TV opcional: "+a.nombre+" por "+pv(a.precio)+"/mes"+(a.requiere?" (requiere "+a.requiere+")":""))});
   var ma=ad.filter(function(a){return a.tipo==="movil_adicional"});
+  if(b.adic_igual_principal)ma=ma.filter(function(a){return b.gb_linea?(+a.gb===+b.gb_linea):(a.gb==null)});
+  if(b.adic_max_principal&&b.gb_linea)ma=ma.filter(function(a){return a.gb==null||+a.gb<=+b.gb_linea});
   ma.forEach(function(a){cond.push("L\u00EDnea adicional "+(a.gb==null?"ilimitada":(+a.gb===0?"0 Gb (comparte los de la principal)":a.gb+" Gb"))+": "+pv(a.precio)+"/mes"+(a.max_unidades?" (m\u00E1x. "+a.max_unidades+")":""))});
   ad.filter(function(a){return a.tipo==="ott"}).forEach(function(a){cond.push("Pack opcional "+a.nombre+": "+pv(a.precio)+"/mes")});
   ad.filter(function(a){return ["fijo","tv","ott","movil_adicional"].indexOf(a.tipo)<0}).forEach(function(a){cond.push(a.nombre+": "+pv(a.precio)+"/mes")});
