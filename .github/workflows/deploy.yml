@@ -1,1 +1,39 @@
+name: Desplegar en Raiola
 
+on:
+  push:
+    branches: [main]
+    paths: ['index.html']
+  workflow_dispatch:
+
+concurrency:
+  group: despliegue-raiola
+  cancel-in-progress: true
+
+jobs:
+  subir:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el repositorio
+        uses: actions/checkout@v4
+
+      - name: Comprobar que el HTML no esta roto
+        run: |
+          test -s index.html || { echo "index.html no existe o esta vacio"; exit 1; }
+          grep -q "</html>" index.html || { echo "index.html parece incompleto"; exit 1; }
+          echo "index.html: $(wc -c < index.html) bytes"
+
+      - name: Subir por FTPS
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: ${{ secrets.FTP_DIR }}
+          protocol: ftps
+          security: loose
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.github/**
+            **/*.md
