@@ -518,7 +518,10 @@ function zzAvisoFaltan(){
   var lm=ms.length>1?ms.slice(0,-1).join(", ")+" y "+ms[ms.length-1]:ms[0];
   return "No se muestran las ofertas indexadas de "+lc+": a\u00FAn no tenemos sus precios de "+lm+".";
 }
-async function v1(l,t,a,e,u,n){if(!Ya){let r=(l==="luz"?Yh[a]:Qh[a])||{},h=Hh[t]||1,_={};return Object.entries(r).forEach(([z,D])=>{_[z]={ene:[0,1,2,3,4,5].map(m=>+((D[m]||0)*h).toFixed(6)),meses:1}}),_}let i=E1(e,u),c=`precios_energia?select=*&sector=eq.${l}&zona=eq.${t}&tarifa=eq.${encodeURIComponent(a)}&activa=eq.true`;c+=n==="indexado"?`&mes=gte.${m1(e)}&mes=lte.${m1(u)}`:`&mes=gte.${z1(i,11)}&mes=lte.${i}`;let f=await Ye(c),s={};f.forEach(r=>{let h=`${r.compania}|${r.oferta}`;(s[h]=s[h]||{})[r.mes]=[r.e1,r.e2,r.e3,r.e4,r.e5,r.e6].map(Number)});let y=A1(e,u),g={};
+async function v1(l,t,a,e,u,n){if(!Ya){let r=(l==="luz"?Yh[a]:Qh[a])||{},h=Hh[t]||1,_={};return Object.entries(r).forEach(([z,D])=>{_[z]={ene:[0,1,2,3,4,5].map(m=>+((D[m]||0)*h).toFixed(6)),meses:1}}),_}let i=E1(e,u),c=`precios_energia?select=*&sector=eq.${l}&zona=eq.${t}&tarifa=eq.${encodeURIComponent(a)}&activa=eq.true`;var zzHoy=new Date(),zzAct=zzHoy.getFullYear()+"-"+String(zzHoy.getMonth()+1).padStart(2,"0")+"-01";
+// cliente que viene de fijo: se promedian los 12 ULTIMOS MESES CERRADOS, la misma ventana
+// que publica la comercializadora y que usa la grafica, no los 12 previos a su factura
+c+=n==="indexado"?`&mes=gte.${m1(e)}&mes=lte.${m1(u)}`:`&mes=gte.${z1(zzAct,12)}&mes=lte.${z1(zzAct,1)}`;let f=await Ye(c),s={};f.forEach(r=>{let h=`${r.compania}|${r.oferta}`;(s[h]=s[h]||{})[r.mes]=[r.e1,r.e2,r.e3,r.e4,r.e5,r.e6].map(Number)});let y=A1(e,u),g={};
 let zzReq=Object.keys(y).sort(),zzOk={};
 if(zzReq.length){
  // universo: quien publica precios en el ultimo ano, no solo en el periodo pedido,
